@@ -1,8 +1,10 @@
 const http = require('http');
+const crypto = require('crypto');
 const { URL } = require('url');
 
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '127.0.0.1';
+const JWT_SECRET = process.env.JWT_SECRET || 'sample-jwt-secret';
 
 const users = {
   'user-101': {
@@ -62,6 +64,83 @@ function extractUserUpdates(body) {
   }
 
   return updates;
+}
+
+function decodeBase64Url(value) {
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padding = '='.repeat((4 - (normalized.length % 4)) % 4);
+
+  return Buffer.from(`${normalized}${padding}`, 'base64').toString('utf8');
+}
+
+function jwtAuthMiddleware(request, response) {
+  const authHeader = request.headers.authorization || '';
+
+  if (!authHeader.startsWith('Bearer ')) {
+    sendJson(response, 401, {
+      message: 'Missing or invalid Authorization header',
+    });
+    return null;
+  }
+
+  const token = authHeader.slice('Bearer '.length).trim();
+  const tokenParts = token.split('.');
+
+  if (tokenParts.length !== 3) {
+    sendJson(response, 401, {
+      message: 'Invalid JWT token',
+    });
+    return null;
+  }
+
+  const [encodedHeader, encodedPayload, providedSignature] = tokenParts;
+
+  let header;
+  let payload;
+
+  try {
+    header = JSON.parse(decodeBase64Url(encodedHeader));
+    payload = JSON.parse(decodeBase64Url(encodedPayload));
+  } catch (error) {
+    sendJson(response, 401, {
+      message: 'Invalid JWT token',
+    });
+    return null;
+  }
+
+  if (header.alg !== 'HS256' || header.typ !== 'JWT') {
+    sendJson(response, 401, {
+      message: 'Unsupported JWT token',
+    });
+    return null;
+  }
+
+  const expectedSignature = crypto
+    .createHmac('sha256', JWT_SECRET)
+    .update(`${encodedHeader}.${encodedPayload}`)
+    .digest('base64url');
+
+  const signatureBuffer = Buffer.from(providedSignature);
+  const expectedSignatureBuffer = Buffer.from(expectedSignature);
+
+  if (
+    signatureBuffer.length !== expectedSignatureBuffer.length ||
+    !crypto.timingSafeEqual(signatureBuffer, expectedSignatureBuffer)
+  ) {
+    sendJson(response, 401, {
+      message: 'Invalid JWT signature',
+    });
+    return null;
+  }
+
+  if (typeof payload.exp === 'number' && Date.now() >= payload.exp * 1000) {
+    sendJson(response, 401, {
+      message: 'JWT token expired',
+    });
+    return null;
+  }
+
+  return payload;
 }
 
 const server = http.createServer(async (request, response) => {
@@ -126,6 +205,12 @@ const server = http.createServer(async (request, response) => {
   }
 
   if (request.method === 'GET' && pathname.startsWith('/user/')) {
+    const authPayload = jwtAuthMiddleware(request, response);
+
+    if (!authPayload) {
+      return;
+    }
+
     const userId = pathname.split('/')[2];
     const user = users[userId];
 
