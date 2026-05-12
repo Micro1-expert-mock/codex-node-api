@@ -1,0 +1,15 @@
+{
+  "name": "sample-node-api",
+  "version": "1.0.0",
+  "description": "Sample Node.js API with login and user endpoints",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "nodejs",
+    "api",
+    "sample"
+  ],
+  "license": "MIT"
+}
