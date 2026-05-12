@@ -51,6 +51,19 @@ function collectRequestBody(request) {
   });
 }
 
+function extractUserUpdates(body) {
+  const allowedFields = ['firstName', 'lastName', 'email'];
+  const updates = {};
+
+  for (const field of allowedFields) {
+    if (typeof body[field] === 'string' && body[field].trim() !== '') {
+      updates[field] = body[field].trim();
+    }
+  }
+
+  return updates;
+}
+
 const server = http.createServer(async (request, response) => {
   const parsedUrl = new URL(request.url, `http://${request.headers.host}`);
   const { pathname } = parsedUrl;
@@ -64,6 +77,45 @@ const server = http.createServer(async (request, response) => {
         message: 'Login successful',
         token: 'dummy-token-abc123',
         userId,
+      });
+    } catch (error) {
+      sendJson(response, 400, {
+        message: 'Invalid JSON request body',
+      });
+    }
+    return;
+  }
+
+  if (request.method === 'PATCH' && pathname.startsWith('/user/')) {
+    const userId = pathname.split('/')[2];
+    const user = users[userId];
+
+    if (!user) {
+      sendJson(response, 404, {
+        message: 'User not found',
+      });
+      return;
+    }
+
+    try {
+      const body = await collectRequestBody(request);
+      const updates = extractUserUpdates(body);
+
+      if (Object.keys(updates).length === 0) {
+        sendJson(response, 400, {
+          message: 'Provide at least one valid field: firstName, lastName, or email',
+        });
+        return;
+      }
+
+      users[userId] = {
+        ...user,
+        ...updates,
+      };
+
+      sendJson(response, 200, {
+        message: 'User updated successfully',
+        user: users[userId],
       });
     } catch (error) {
       sendJson(response, 400, {
