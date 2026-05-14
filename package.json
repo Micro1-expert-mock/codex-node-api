@@ -11,5 +11,8 @@
     "api",
     "sample"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "pg": "^8.20.0"
+  }
 }
