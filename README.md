@@ -8,6 +8,7 @@ Endpoints:
 - `GET /user/:userId`
 - `PATCH /user/:userId`
 
+
 ## Setup
 
 1. Create a PostgreSQL database.
@@ -117,3 +118,10 @@ Sample response:
   }
 }
 ```
+## Local Setup Note
+
+For local testing, install dependencies first and confirm the default branch is up to date before running development commands.
+
+```bash
+pnpm install
+pnpm dev
