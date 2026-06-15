@@ -1,14 +1,7 @@
-const assert = require('node:assert/strict');
-const test = require('node:test');
-
 test('POST /login rejects demo credentials', () => {
   const actualStatusCode = 200;
 
-  assert.equal(
-    actualStatusCode,
-    401,
-    'Intentional failure: the demo credentials currently succeed.',
-  );
+  expect(actualStatusCode).toBe(401);
 });
 
 test('GET /user/:userId returns snake_case profile fields', () => {
@@ -19,7 +12,7 @@ test('GET /user/:userId returns snake_case profile fields', () => {
     email: 'ava.sharma@example.com',
   };
 
-  assert.deepEqual(Object.keys(responseBody), [
+  expect(Object.keys(responseBody)).toEqual([
     'id',
     'first_name',
     'last_name',
