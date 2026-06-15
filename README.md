@@ -26,6 +26,22 @@ npm start
 
 The server starts on `http://localhost:3000`.
 
+## Quality checks
+
+Run the test suite:
+
+```bash
+npm test
+```
+
+Run the lint checks:
+
+```bash
+npm run lint
+```
+
+Both commands currently include intentional failures for CI testing.
+
 On first start, the app creates the `users` table automatically and seeds two users:
 
 - `demo` / `demo`
