@@ -28,13 +28,13 @@ The server starts on `http://localhost:3000`.
 
 ## Quality checks
 
-Run the test suite:
+Run the Jest test suite:
 
 ```bash
 npm test
 ```
 
-Run the lint checks:
+Run the ESLint checks:
 
 ```bash
 npm run lint
