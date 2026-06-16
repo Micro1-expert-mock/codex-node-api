@@ -8,10 +8,26 @@ Endpoints:
 - `GET /user/:userId`
 - `PATCH /user/:userId`
 
-## Setup
+## Local development
 
-1. Create a PostgreSQL database.
-2. Copy `.env.example` values into your shell or environment.
+1. Start the bundled Postgres service:
+
+```bash
+docker compose up -d postgres
+```
+
+Wait until `docker compose ps` shows `sample-node-api-postgres` as `healthy`.
+
+2. Export the database settings from `.env.example` into your shell. In `bash` or `zsh`:
+
+```bash
+set -a
+source .env.example
+set +a
+```
+
+The app reads environment variables directly, so it will not auto-load `.env.example` on its own.
+
 3. Install dependencies:
 
 ```bash
@@ -24,7 +40,9 @@ npm install
 npm start
 ```
 
-The server starts on `http://localhost:3000`.
+The server starts on `http://127.0.0.1:3000`.
+
+If you already have PostgreSQL running locally, you can skip Docker Compose and point the `PG*` variables or `DATABASE_URL` at that instance instead.
 
 ## Quality checks
 
@@ -47,9 +65,19 @@ On first start, the app creates the `users` table automatically and seeds two us
 - `demo` / `demo`
 - `noah` / `demo`
 
+To stop the local database:
+
+```bash
+docker compose down
+```
+
+Run `docker compose down -v` to remove the local data volume and reseed the database from scratch on the next start.
+
 ## Environment
 
 Use either the individual `PG*` variables or a single `DATABASE_URL`.
+
+`.env.example` matches the Docker Compose defaults.
 
 Example:
 
@@ -59,6 +87,12 @@ export PGPORT=5432
 export PGUSER=postgres
 export PGPASSWORD=postgres
 export PGDATABASE=sample_node_api
+```
+
+Or:
+
+```bash
+export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/sample_node_api
 ```
 
 ## Endpoints
